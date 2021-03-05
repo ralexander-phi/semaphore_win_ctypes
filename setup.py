@@ -14,7 +14,10 @@ requirements = [ ]
 
 setup_requirements = ['pytest-runner', ]
 
-test_requirements = ['pytest>=3', ]
+test_requirements = [
+    'pytest>=6',
+    "pytest-cov>=2",
+]
 
 setup(
     author="Robert Alexander",
