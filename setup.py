@@ -10,7 +10,8 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = []
+with open('requirements.txt') as requirements_file:
+    requirements = requirements_file.read()
 
 setup_requirements = ['pytest-runner', ]
 
@@ -33,6 +34,8 @@ setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
     ],
     description="A ctypes wrapper for Windows Semaphore Objects",
     install_requires=requirements,
