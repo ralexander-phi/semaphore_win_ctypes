@@ -1,22 +1,9 @@
 """Main module."""
 
-from ctypes import windll, WinError, c_long, pointer
-from ctypes.wintypes import BOOL, DWORD, HANDLE, LPCWSTR, LONG
-
-
-class SemaphoreMaximumCountWouldBeExceededException(Exception):
-    """
-    When performing a Semaphore.release() the semaphore's maximum value would
-    be exceeded
-    """
-    pass
-
-
-class SemaphoreWaitAbandonedException(Exception):
-    """
-    WAIT_ABANDONED
-    """
-    pass
+from __future__ import annotations
+from ctypes import POINTER, windll, WinError
+from ctypes.wintypes import BOOL, DWORD, HANDLE, LONG, LPCWSTR, LPVOID
+from windows.generated_def import INFINITE
 
 
 class SemaphoreWaitTimeoutException(Exception):
@@ -26,128 +13,209 @@ class SemaphoreWaitTimeoutException(Exception):
     pass
 
 
-class SemaphoreWaitFailedException(Exception):
-    """
-    WAIT_FAILED
-    """
-    pass
+LPSECURITY_ATTRIBUTES = LPVOID
+LPLONG = POINTER(LONG)
+
+"""
+https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-createsemaphoreexw
+HANDLE CreateSemaphoreExW(
+  LPSECURITY_ATTRIBUTES lpSemaphoreAttributes,
+  LONG                  lInitialCount,
+  LONG                  lMaximumCount,
+  LPCWSTR               lpName,
+  DWORD                 dwFlags,
+  DWORD                 dwDesiredAccess
+);
+"""
+CreateSemaphoreExW = windll.kernel32.CreateSemaphoreExW
+CreateSemaphoreExW.argtypes = LPSECURITY_ATTRIBUTES, LONG, LONG, LPCWSTR, DWORD, DWORD
+CreateSemaphoreExW.restype = HANDLE
+
+"""
+https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-opensemaphorew
+HANDLE OpenSemaphoreW(
+  DWORD   dwDesiredAccess,
+  BOOL    bInheritHandle,
+  LPCWSTR lpName
+);
+"""
+OpenSemaphoreW = windll.kernel32.OpenSemaphoreW
+OpenSemaphoreW.argtypes = DWORD, BOOL, LPCWSTR
+OpenSemaphoreW.restype = HANDLE
+
+"""
+https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-waitforsingleobject
+DWORD WaitForSingleObject(
+  HANDLE hHandle,
+  DWORD  dwMilliseconds
+);
+"""
+WaitForSingleObject = windll.kernel32.WaitForSingleObject
+WaitForSingleObject.argtypes = HANDLE, DWORD
+WaitForSingleObject.restype = DWORD
+
+"""
+https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-releasesemaphore
+BOOL ReleaseSemaphore(
+  HANDLE hSemaphore,
+  LONG   lReleaseCount,
+  LPLONG lpPreviousCount
+);
+"""
+ReleaseSemaphore = windll.kernel32.ReleaseSemaphore
+ReleaseSemaphore.argtypes = HANDLE, LONG, LPLONG
+ReleaseSemaphore.restype = BOOL
+
+"""
+https://docs.microsoft.com/en-us/windows/win32/api/handleapi/nf-handleapi-closehandle
+BOOL CloseHandle(
+  HANDLE hObject
+);
+"""
+CloseHandle = windll.kernel32.CloseHandle
+CloseHandle.argtypes = (HANDLE,)
+CloseHandle.restype = BOOL
+
+SEMAPHORE_MODIFY_STATE = DWORD(0x000002)
+SEMAPHORE_ALL_ACCESS   = DWORD(0x1F0003)
 
 
 class Semaphore:
-    def __init__(self):
-        self.hHandle: HANDLE = None
+    def __init__(self, name: str = None):
+        """
+        Initialize Semaphore class
 
-    def create(self, attr=None, initial_count: int = 1, maximum_count: int = 1,
-               name: str = None) -> None:
+        :param name: A name for the Semaphore (default: unnamed)
         """
-        I.E:
-        CreateSemaphoreW()
-        https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-createsemaphorew
-        LPSECURITY_ATTRIBUTES lpSemaphoreAttributes,
-        LONG                  lInitialCount,
-        LONG                  lMaximumCount,
-        LPCWSTR               lpName
+        self.name: str = name
+        self.hHandle: HANDLE = HANDLE()
+
+    def create(self,
+               maximum_count: int = 1,
+               initial_count: int = None,
+               desired_access: DWORD = SEMAPHORE_ALL_ACCESS,
+               ) -> Semaphore:
         """
-        self.hHandle: HANDLE = windll.kernel32.CreateSemaphoreW(
-            attr,
+        CreateSemaphoreExW
+
+        :param maximum_count: The maximum count of the Semaphore (default: 1)
+        :param initial_count: The initial count of the Semaphore (default: maximum_count)
+        :param desired_access: The access mask for the semaphore object
+            (default: SEMAPHORE_ALL_ACCESS)
+        :raises WinError: The function has failed.
+        :returns: The Semaphore, for chaining calls
+
+        https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-createsemaphoreexw
+        """
+        assert not self.hHandle
+        if initial_count is None:
+            initial_count = maximum_count
+        assert initial_count <= maximum_count
+        self.hHandle: HANDLE = CreateSemaphoreExW(
+            None,
             LONG(initial_count),
             LONG(maximum_count),
-            LPCWSTR(name)
+            LPCWSTR(self.name),
+            DWORD(0),  # reserved
+            desired_access,
         )
         if not self.hHandle:
             raise WinError()
+        return self
 
-    def open(self, name: str, desired_access: int, inherit: bool = True
-             ) -> None:
+    def open(self, desired_access: DWORD = SEMAPHORE_MODIFY_STATE,
+             inherit: bool = True,
+             ) -> Semaphore:
         """
-        I.E.:
-        OpenSemaphoreW()
+        OpenSemaphoreW
+
+        :param desired_access: The access mask for the semaphore object
+            (default: SEMAPHORE_MODIFY_STATE)
+        :param inherit: If this value is TRUE, processes created by this
+            process will inherit the handle.
+        :raises WinError: The function has failed.
+        :returns: The Semaphore, for chaining calls
+
         https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-opensemaphorew
-        DWORD   dwDesiredAccess,
-        BOOL    bInheritHandle,
-        LPCWSTR lpName
         """
-        self.hHandle: HANDLE = windll.kernel32.OpenSemaphoreW(
-            DWORD(desired_access),
+        assert not self.hHandle
+        assert self.name is not None
+        self.hHandle: HANDLE = OpenSemaphoreW(
+            desired_access,
             BOOL(inherit),
-            LPCWSTR(name)
+            LPCWSTR(self.name)
         )
         if not self.hHandle:
             raise WinError()
+        return self
 
-    def acquire(self, timeout_ms: int) -> None:
+    def acquire(self, timeout_ms: int = None) -> None:
         """
-        Try to decrement the semaphore's counter.
+        WaitForSingleObject
+        :param timeout_ms: The time-out interval, in milliseconds. (default:
+            None - infinite wait)
+        :raises SemaphoreWaitTimeoutException: The time-out interval elapsed,
+            and the object's state is nonsignaled.
+        :raises WinError: The function has failed.
 
-        timeout_ms:
-          0 -> Don't wait
-          non-zero -> Wait the specified number of milliseconds
-          INFINITE -> Wait as long as needed
-
-        I.E.:
-        WaitForSingleObject()
         https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-waitforsingleobject
-        HANDLE hHandle,
-        DWORD  dwMilliseconds
         """
         assert self.hHandle
-        ret: DWORD = windll.kernel32.WaitForSingleObject(
+        if timeout_ms is None:
+            timeout_ms = INFINITE
+        else:
+            timeout_ms = DWORD(timeout_ms)
+            assert timeout_ms != INFINITE, "Use None to specify an infinite timeout"
+        ret: DWORD = WaitForSingleObject(
             self.hHandle,
-            DWORD(timeout_ms)
+            timeout_ms
         )
-        if ret == 0x80:
-            raise SemaphoreWaitAbandonedException()
-        elif ret == 0x0:
+        if ret == 0x0:
             return
         elif ret == 0x102:
             raise SemaphoreWaitTimeoutException()
         elif ret == 0xFFFFFFFF:
-            raise SemaphoreWaitFailedException()
+            raise WinError()
         else:
-            assert False, f"Unknown return code: {ret}"
+            assert False, f"Unexpected return code: {ret}"
 
     def release(self, release_count: int = 1) -> int:
         """
-        Release the specified count.
-        If the release would exceed the semaphore limit, raises
-        SemaphoreMaximumCountWouldBeExceeded
-        Returns the previous count
+        ReleaseSemaphore
+        :param release_count: The amount to increase the semaphore's counter
+        :returns: The previous count
+        :raises WinError: When release() fails.
 
-        I.E.:
-        ReleaseSemaphore()
         https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-releasesemaphore
-        HANDLE hSemaphore,
-        LONG   lReleaseCount,
-        LPLONG lpPreviousCount
         """
         assert self.hHandle
-        lPreviousCount: c_long = c_long(0)
-        ret: BOOL = windll.kernel32.ReleaseSemaphore(
+        previous_count: LONG = LONG(0)
+        ret: BOOL = ReleaseSemaphore(
             self.hHandle,
-            c_long(release_count),
-            pointer(lPreviousCount)
+            LONG(release_count),
+            LPLONG(previous_count)
         )
         if not ret:
             raise WinError()
-        return lPreviousCount.value
+        return previous_count.value
 
     def close(self) -> None:
         """
-        I.E.:
+        CloseHandle
+        :raises WinError: When close() fails.
+
         https://docs.microsoft.com/en-us/windows/win32/api/handleapi/nf-handleapi-closehandle
-        BOOL CloseHandle(
-          HANDLE hObject
-        );
         """
         assert self.hHandle
-        ret: BOOL = windll.kernel32.CloseHandle(
+        ret: BOOL = CloseHandle(
             self.hHandle
         )
         if not ret:
             raise WinError()
 
-    def unlink(self) -> None:
-        """
-        Which is this?
-        """
-        pass
+    def __enter__(self):
+        assert self.hHandle, "Call open() or create() first"
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()

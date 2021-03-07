@@ -9,8 +9,9 @@ from semaphore_win_ctypes.semaphore_win_ctypes import Semaphore, \
 
 
 def test_basic():
-    sem = Semaphore()
-    sem.create(attr=None, initial_count=1, maximum_count=1, name="Testing")
+    sem = Semaphore("Testing")
+    assert sem.name == "Testing"
+    sem.create(1, 1)
     sem.acquire(0)
     old_count = sem.release(release_count=1)
     assert old_count == 0
@@ -19,7 +20,7 @@ def test_basic():
 
 def test_too_many_acquires():
     sem = Semaphore()
-    sem.create(attr=None, initial_count=1, maximum_count=1, name="Testing")
+    sem.create(1, 1)
     sem.acquire(0)
     with pytest.raises(SemaphoreWaitTimeoutException) as _:
         sem.acquire(0)
@@ -28,7 +29,7 @@ def test_too_many_acquires():
 
 def test_too_many_releases():
     sem = Semaphore()
-    sem.create(attr=None, initial_count=1, maximum_count=1, name="Testing")
+    sem.create(1, 1)
     with pytest.raises(OSError) as _:
         sem.release(release_count=1)
     sem.close()
@@ -36,7 +37,7 @@ def test_too_many_releases():
 
 def test_acquire_release_cycle():
     sem = Semaphore()
-    sem.create(attr=None, initial_count=1, maximum_count=1, name="Testing")
+    sem.create(1, 1)
     for _ in range(10):
         sem.acquire(0)
         old_count = sem.release(release_count=1)
@@ -46,7 +47,7 @@ def test_acquire_release_cycle():
 
 def test_too_many_closes():
     sem = Semaphore()
-    sem.create(attr=None, initial_count=1, maximum_count=1, name="Testing")
+    sem.create(1, 1)
     sem.close()
     with pytest.raises(OSError) as _:
         sem.close()
@@ -54,7 +55,7 @@ def test_too_many_closes():
 
 def test_low_starting_value():
     sem = Semaphore()
-    sem.create(attr=None, initial_count=0, maximum_count=5, name="Testing")
+    sem.create(5, 0)
     # fail: count is zero
     with pytest.raises(SemaphoreWaitTimeoutException) as _:
         sem.acquire(0)
