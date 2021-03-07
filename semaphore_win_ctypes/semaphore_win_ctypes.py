@@ -28,7 +28,8 @@ HANDLE CreateSemaphoreExW(
 );
 """
 CreateSemaphoreExW = windll.kernel32.CreateSemaphoreExW
-CreateSemaphoreExW.argtypes = LPSECURITY_ATTRIBUTES, LONG, LONG, LPCWSTR, DWORD, DWORD
+CreateSemaphoreExW.argtypes = (LPSECURITY_ATTRIBUTES, LONG, LONG,
+                               LPCWSTR, DWORD, DWORD)
 CreateSemaphoreExW.restype = HANDLE
 
 """
@@ -77,7 +78,7 @@ CloseHandle.argtypes = (HANDLE,)
 CloseHandle.restype = BOOL
 
 SEMAPHORE_MODIFY_STATE = DWORD(0x000002)
-SEMAPHORE_ALL_ACCESS   = DWORD(0x1F0003)
+SEMAPHORE_ALL_ACCESS = DWORD(0x1F0003)
 
 
 class Semaphore:
@@ -98,8 +99,10 @@ class Semaphore:
         """
         CreateSemaphoreExW
 
-        :param maximum_count: The maximum count of the Semaphore (default: 1)
-        :param initial_count: The initial count of the Semaphore (default: maximum_count)
+        :param maximum_count: The maximum count of the Semaphore
+            (default: 1)
+        :param initial_count: The initial count of the Semaphore
+            (default: maximum_count)
         :param desired_access: The access mask for the semaphore object
             (default: SEMAPHORE_ALL_ACCESS)
         :raises WinError: The function has failed.
@@ -165,7 +168,8 @@ class Semaphore:
             timeout_ms = INFINITE
         else:
             timeout_ms = DWORD(timeout_ms)
-            assert timeout_ms != INFINITE, "Use None to specify an infinite timeout"
+            assert timeout_ms != INFINITE,\
+                "Use None to specify an infinite timeout"
         ret: DWORD = WaitForSingleObject(
             self.hHandle,
             timeout_ms
