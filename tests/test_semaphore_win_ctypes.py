@@ -4,7 +4,8 @@
 
 import pytest
 
-from semaphore_win_ctypes.semaphore_win_ctypes import *
+from semaphore_win_ctypes.semaphore_win_ctypes import Semaphore, \
+    SemaphoreWaitTimeoutException
 
 
 def test_basic():
@@ -65,4 +66,3 @@ def test_low_starting_value():
     with pytest.raises(OSError) as _:
         sem.release(release_count=1)
     sem.close()
-

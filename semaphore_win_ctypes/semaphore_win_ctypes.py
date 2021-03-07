@@ -1,12 +1,13 @@
 """Main module."""
 
-from ctypes import *
+from ctypes import windll, WinError, c_long, pointer
 from ctypes.wintypes import BOOL, DWORD, HANDLE, LPCWSTR, LONG
 
 
 class SemaphoreMaximumCountWouldBeExceededException(Exception):
     """
-    When performing a Semaphore.release() the semaphore's maximum value would be exceeded
+    When performing a Semaphore.release() the semaphore's maximum value would
+    be exceeded
     """
     pass
 
@@ -36,7 +37,8 @@ class Semaphore:
     def __init__(self):
         self.hHandle: HANDLE = None
 
-    def create(self, attr=None, initial_count: int = 1, maximum_count: int = 1, name: str = None) -> None:
+    def create(self, attr=None, initial_count: int = 1, maximum_count: int = 1,
+               name: str = None) -> None:
         """
         I.E:
         CreateSemaphoreW()
@@ -55,7 +57,8 @@ class Semaphore:
         if not self.hHandle:
             raise WinError()
 
-    def open(self, name: str, desired_access: int, inherit: bool = True) -> None:
+    def open(self, name: str, desired_access: int, inherit: bool = True
+             ) -> None:
         """
         I.E.:
         OpenSemaphoreW()
@@ -106,7 +109,8 @@ class Semaphore:
     def release(self, release_count: int = 1) -> int:
         """
         Release the specified count.
-        If the release would exceed the semaphore limit, raises SemaphoreMaximumCountWouldBeExceeded
+        If the release would exceed the semaphore limit, raises
+        SemaphoreMaximumCountWouldBeExceeded
         Returns the previous count
 
         I.E.:

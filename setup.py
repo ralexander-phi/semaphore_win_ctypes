@@ -10,7 +10,7 @@ with open('README.rst') as readme_file:
 with open('HISTORY.rst') as history_file:
     history = history_file.read()
 
-requirements = [ ]
+requirements = []
 
 setup_requirements = ['pytest-runner', ]
 
@@ -41,7 +41,10 @@ setup(
     include_package_data=True,
     keywords='semaphore_win_ctypes',
     name='semaphore_win_ctypes',
-    packages=find_packages(include=['semaphore_win_ctypes', 'semaphore_win_ctypes.*']),
+    packages=find_packages(include=[
+        'semaphore_win_ctypes',
+        'semaphore_win_ctypes.*'
+    ]),
     setup_requires=setup_requirements,
     test_suite='tests',
     tests_require=test_requirements,
