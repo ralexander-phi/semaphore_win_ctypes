@@ -36,7 +36,6 @@ jobs:
           python -m pip install pytest
           python -m pip install pytest-cov
           python -m pytest --cov=semaphore_win_ctypes
-          coverage report
       - name: Lint with flake8
         run: |
           python -m pip install flake8
