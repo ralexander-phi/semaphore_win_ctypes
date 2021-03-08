@@ -172,7 +172,7 @@ class Semaphore:
             timeout_ms
         )
         if ret == 0x0:
-            return
+            return self
         elif ret == 0x102:
             raise SemaphoreWaitTimeoutException()
         elif ret == 0xFFFFFFFF:
