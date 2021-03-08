@@ -3,7 +3,8 @@
 from __future__ import annotations
 from ctypes import POINTER, windll, WinError
 from ctypes.wintypes import BOOL, DWORD, HANDLE, LONG, LPCWSTR, LPVOID
-from windows.generated_def import INFINITE
+from typing import Union
+from windows.generated_def import INFINITE, SEMAPHORE_ALL_ACCESS
 
 
 class SemaphoreWaitTimeoutException(Exception):
@@ -77,9 +78,6 @@ CloseHandle = windll.kernel32.CloseHandle
 CloseHandle.argtypes = (HANDLE,)
 CloseHandle.restype = BOOL
 
-SEMAPHORE_MODIFY_STATE = DWORD(0x000002)
-SEMAPHORE_ALL_ACCESS = DWORD(0x1F0003)
-
 
 class Semaphore:
     def __init__(self, name: str = None):
@@ -105,7 +103,7 @@ class Semaphore:
             (default: maximum_count)
         :param desired_access: The access mask for the semaphore object
             (default: SEMAPHORE_ALL_ACCESS)
-        :raises WinError: The function has failed.
+        :raises OSError: The function has failed.
         :returns: The Semaphore, for chaining calls
 
         https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-createsemaphoreexw
@@ -113,7 +111,6 @@ class Semaphore:
         assert not self.hHandle
         if initial_count is None:
             initial_count = maximum_count
-        assert initial_count <= maximum_count
         self.hHandle: HANDLE = CreateSemaphoreExW(
             None,
             LONG(initial_count),
@@ -126,17 +123,17 @@ class Semaphore:
             raise WinError()
         return self
 
-    def open(self, desired_access: DWORD = SEMAPHORE_MODIFY_STATE,
+    def open(self, desired_access: DWORD = SEMAPHORE_ALL_ACCESS,
              inherit: bool = True,
              ) -> Semaphore:
         """
         OpenSemaphoreW
 
         :param desired_access: The access mask for the semaphore object
-            (default: SEMAPHORE_MODIFY_STATE)
+            (default: SEMAPHORE_ALL_ACCESS)
         :param inherit: If this value is TRUE, processes created by this
             process will inherit the handle.
-        :raises WinError: The function has failed.
+        :raises OSError: The function has failed.
         :returns: The Semaphore, for chaining calls
 
         https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-opensemaphorew
@@ -152,23 +149,23 @@ class Semaphore:
             raise WinError()
         return self
 
-    def acquire(self, timeout_ms: int = None) -> None:
+    def acquire(self, timeout_ms: int = None) -> Semaphore:
         """
         WaitForSingleObject
         :param timeout_ms: The time-out interval, in milliseconds. (default:
             None - infinite wait)
         :raises SemaphoreWaitTimeoutException: The time-out interval elapsed,
             and the object's state is nonsignaled.
-        :raises WinError: The function has failed.
+        :raises OSError: The function has failed.
+        :returns: The Semaphore, for chaining calls
 
         https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-waitforsingleobject
         """
-        assert self.hHandle
         if timeout_ms is None:
             timeout_ms = INFINITE
         else:
             timeout_ms = DWORD(timeout_ms)
-            assert timeout_ms != INFINITE,\
+            assert timeout_ms != INFINITE, \
                 "Use None to specify an infinite timeout"
         ret: DWORD = WaitForSingleObject(
             self.hHandle,
@@ -188,11 +185,10 @@ class Semaphore:
         ReleaseSemaphore
         :param release_count: The amount to increase the semaphore's counter
         :returns: The previous count
-        :raises WinError: When release() fails.
+        :raises OSError: When release() fails.
 
         https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-releasesemaphore
         """
-        assert self.hHandle
         previous_count: LONG = LONG(0)
         ret: BOOL = ReleaseSemaphore(
             self.hHandle,
@@ -206,20 +202,59 @@ class Semaphore:
     def close(self) -> None:
         """
         CloseHandle
-        :raises WinError: When close() fails.
+        :raises OSError: When close() fails.
 
         https://docs.microsoft.com/en-us/windows/win32/api/handleapi/nf-handleapi-closehandle
         """
-        assert self.hHandle
         ret: BOOL = CloseHandle(
             self.hHandle
         )
         if not ret:
             raise WinError()
+        self.hHandle = None
+
+
+class CreateSemaphore:
+    def __init__(self,
+                 name: str = None,
+                 maximum_count: int = 1,
+                 initial_count: int = None,
+                 desired_access: DWORD = SEMAPHORE_ALL_ACCESS,
+                 ):
+        self.sem = Semaphore(name)
+        self.sem.create(maximum_count, initial_count, desired_access)
 
     def __enter__(self):
-        assert self.hHandle, "Call open() or create() first"
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        self.close()
+        self.sem.close()
+
+
+class OpenSemaphore:
+    def __init__(self,
+                 name: str = None,
+                 desired_access: DWORD = SEMAPHORE_ALL_ACCESS,
+                 inherit: bool = True,
+                 ):
+        self.sem = Semaphore(name)
+        self.sem.open(desired_access, inherit)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.sem.close()
+
+
+class AcquireSemaphore:
+    def __init__(self, handle: Union[CreateSemaphore, OpenSemaphore],
+                 timeout_ms: int = None):
+        self.handle: Union[CreateSemaphore, OpenSemaphore] = handle
+        self.timeout_ms = timeout_ms
+
+    def __enter__(self):
+        self.handle.sem.acquire(self.timeout_ms)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.handle.sem.release()
