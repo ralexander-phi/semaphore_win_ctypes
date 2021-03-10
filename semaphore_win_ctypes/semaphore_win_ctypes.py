@@ -4,7 +4,8 @@ from __future__ import annotations
 from ctypes import POINTER, windll, WinError
 from ctypes.wintypes import BOOL, DWORD, HANDLE, LONG, LPCWSTR, LPVOID
 from typing import Union
-from windows.generated_def import INFINITE, SEMAPHORE_ALL_ACCESS
+from windows.generated_def import INFINITE, SEMAPHORE_ALL_ACCESS, \
+    WAIT_TIMEOUT
 
 
 class SemaphoreWaitTimeoutException(Exception):
@@ -173,7 +174,7 @@ class Semaphore:
         )
         if ret == 0x0:
             return self
-        elif ret == 0x102:
+        elif ret == WAIT_TIMEOUT:
             raise SemaphoreWaitTimeoutException()
         elif ret == 0xFFFFFFFF:
             raise WinError()
