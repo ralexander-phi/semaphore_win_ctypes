@@ -35,7 +35,7 @@ jobs:
         run: Invoke-WebRequest -Uri "https://github.com/ralexander-phi/windows-semaphore-helper/releases/download/v0.1/SemaphoreHelper.exe" -OutFile SemaphoreHelper.exe
       - name: Test with pytest
         run: |
-          python -m pip install -r requirements-dev.txt
+          python -m pip install -r requirements_dev.txt
           python -m pytest --cov=semaphore_win_ctypes
       - name: Lint with flake8
         run: |
