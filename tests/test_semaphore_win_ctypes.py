@@ -1,8 +1,10 @@
 """Tests for `semaphore_win_ctypes` package."""
 
+import datetime
 import pytest
 import uuid
 
+from ctypes.wintypes import DWORD
 from semaphore_win_ctypes.semaphore_win_ctypes import Semaphore, \
     SemaphoreWaitTimeoutException, CreateSemaphore, OpenSemaphore, \
     AcquireSemaphore
@@ -66,6 +68,22 @@ def test_multi_release(unique_name):
         with pytest.raises(SemaphoreWaitTimeoutException):
             # Can't acquire 6 times
             sem.acquire(0)
+    finally:
+        sem.close()
+
+
+def test_old_count(unique_name):
+    sem = Semaphore(unique_name).create(maximum_count=5, initial_count=5)
+    try:
+        for _ in range(5):
+            sem.acquire(0)
+        with pytest.raises(SemaphoreWaitTimeoutException):
+            # Can't acquire 6 times
+            sem.acquire(0)
+
+        for expected_count in range(5):
+            old_count = sem.release(release_count=1)
+            assert old_count == expected_count
     finally:
         sem.close()
 
@@ -166,3 +184,24 @@ def test_default_initial_count(unique_name):
             other.close()
     finally:
         sem.close()
+
+
+@pytest.mark.parametrize('timeout_ms', [0, 1, 500])
+def test_timeout(timeout_ms: int):
+    sem = Semaphore().create()
+    try:
+        sem.acquire(0)
+        start_time = datetime.datetime.now()
+        with pytest.raises(SemaphoreWaitTimeoutException) as _:
+            sem.acquire(timeout_ms=timeout_ms)
+        end_time = datetime.datetime.now()
+        delta_ms = (end_time - start_time).total_seconds() * 1000
+        assert timeout_ms <= delta_ms <= (timeout_ms+50)
+    finally:
+        sem.close()
+
+
+def test_wait_failure():
+    sem = Semaphore().create(desired_access=DWORD(0))
+    with pytest.raises(OSError):
+        sem.acquire()
