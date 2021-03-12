@@ -15,6 +15,7 @@ INFINITE = 0xFFFFFFFF
 # https://docs.microsoft.com/en-us/windows/win32/sync/synchronization-object-security-and-access-rights
 SEMAPHORE_ALL_ACCESS = 0x1F0003
 
+
 class SemaphoreWaitTimeoutException(Exception):
     """
     WAIT_TIMEOUT
