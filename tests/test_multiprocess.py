@@ -1,3 +1,4 @@
+import datetime
 import pytest
 import subprocess
 import time
@@ -145,3 +146,31 @@ def test_multiprocess_mixed_with_ctypes_semaphore(ctypes_semaphore: str):
         )
     # Only some of them should succeed
     assert sum(results) == TEST_SEMAPHORE_MAX_COUNT
+
+
+def timed_acquire(name: str) -> float:
+    start_time = datetime.datetime.now()
+    with OpenSemaphore(name=name) as sem:
+        with AcquireSemaphore(sem, timeout_ms=None):
+            time.sleep(TEST_SEMAPHORE_ACQUIRE_HOLD_TIME_S)
+    end_time = datetime.datetime.now()
+    return (end_time - start_time).total_seconds()
+
+
+def test_multiprocess_infinite_wait():
+    # Use two semaphores, let the first lock out the second
+    name = unique_name()
+    with CreateSemaphore(name):
+        with ThreadPool(2) as p:
+            results = p.map(
+                timed_acquire,
+                [name, name]
+            )
+        fastest = min(results)
+        slowest = max(results)
+        assert TEST_SEMAPHORE_ACQUIRE_HOLD_TIME_S \
+               <= fastest \
+               <= (TEST_SEMAPHORE_ACQUIRE_HOLD_TIME_S+50)
+        assert (2*TEST_SEMAPHORE_ACQUIRE_HOLD_TIME_S) \
+               <= slowest \
+               <= (2*TEST_SEMAPHORE_ACQUIRE_HOLD_TIME_S+50)

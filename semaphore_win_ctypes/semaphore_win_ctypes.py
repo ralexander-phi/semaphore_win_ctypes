@@ -7,6 +7,11 @@ from typing import Union
 from windows.generated_def import INFINITE, SEMAPHORE_ALL_ACCESS, \
     WAIT_TIMEOUT
 
+# https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-waitforsingleobject
+WAIT_OBJECT_0 = 0x00000000
+WAIT_ABANDONED = 0x00000080
+WAIT_FAILED = 0xFFFFFFFF
+
 
 class SemaphoreWaitTimeoutException(Exception):
     """
@@ -124,7 +129,8 @@ class Semaphore:
             raise WinError()
         return self
 
-    def open(self, desired_access: DWORD = SEMAPHORE_ALL_ACCESS,
+    def open(self,
+             desired_access: DWORD = SEMAPHORE_ALL_ACCESS,
              inherit: bool = True,
              ) -> Semaphore:
         """
@@ -172,11 +178,11 @@ class Semaphore:
             self.hHandle,
             timeout_ms
         )
-        if ret == 0x0:
+        if ret == WAIT_OBJECT_0:
             return self
         elif ret == WAIT_TIMEOUT:
             raise SemaphoreWaitTimeoutException()
-        elif ret == 0xFFFFFFFF:
+        elif ret == WAIT_FAILED:
             raise WinError()
         else:
             assert False, f"Unexpected return code: {ret}"
@@ -225,7 +231,7 @@ class CreateSemaphore:
         self.sem = Semaphore(name)
         self.sem.create(maximum_count, initial_count, desired_access)
 
-    def __enter__(self):
+    def __enter__(self) -> CreateSemaphore:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -241,7 +247,7 @@ class OpenSemaphore:
         self.sem = Semaphore(name)
         self.sem.open(desired_access, inherit)
 
-    def __enter__(self):
+    def __enter__(self) -> OpenSemaphore:
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -249,13 +255,16 @@ class OpenSemaphore:
 
 
 class AcquireSemaphore:
-    def __init__(self, handle: Union[CreateSemaphore, OpenSemaphore],
-                 timeout_ms: int = None):
-        self.handle: Union[CreateSemaphore, OpenSemaphore] = handle
+    def __init__(self,
+                 handle: Union[CreateSemaphore, OpenSemaphore],
+                 timeout_ms: int = None
+                 ):
+        self.handle = handle
         self.timeout_ms = timeout_ms
 
-    def __enter__(self):
+    def __enter__(self) -> AcquireSemaphore:
         self.handle.sem.acquire(self.timeout_ms)
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.handle.sem.release()
