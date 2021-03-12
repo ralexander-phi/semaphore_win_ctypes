@@ -4,14 +4,16 @@ from __future__ import annotations
 from ctypes import POINTER, windll, WinError
 from ctypes.wintypes import BOOL, DWORD, HANDLE, LONG, LPCWSTR, LPVOID
 from typing import Union
-from windows.generated_def import INFINITE, SEMAPHORE_ALL_ACCESS, \
-    WAIT_TIMEOUT
 
 # https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-waitforsingleobject
 WAIT_OBJECT_0 = 0x00000000
 WAIT_ABANDONED = 0x00000080
+WAIT_TIMEOUT = 0x00000102
 WAIT_FAILED = 0xFFFFFFFF
+INFINITE = 0xFFFFFFFF
 
+# https://docs.microsoft.com/en-us/windows/win32/sync/synchronization-object-security-and-access-rights
+SEMAPHORE_ALL_ACCESS = 0x1F0003
 
 class SemaphoreWaitTimeoutException(Exception):
     """
