@@ -62,12 +62,14 @@ Similar work on other platforms:
 
 Other items:
 
-* `windows semaphore helper`_ — C++ demo of working with Windows Semaphore APIs
+* `windows semaphore helper`_ -- C++ demo of working with Windows Semaphore APIs
 
 Credits
 -------
 
 This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
+
+
 .. _`shared between python processes`: https://stackoverflow.com/a/28854553
 .. _`built-in semaphore support`: https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Semaphore
 .. _`CreateSemaphoreExW`: https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-createsemaphoreexw
