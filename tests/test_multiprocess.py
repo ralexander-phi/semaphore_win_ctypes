@@ -5,7 +5,7 @@ import time
 import uuid
 
 from multiprocessing.pool import ThreadPool
-from semaphore_win_ctypes.semaphore_win_ctypes import AcquireSemaphore, \
+from semaphore_win_ctypes import AcquireSemaphore, \
     CreateSemaphore, OpenSemaphore, SemaphoreWaitTimeoutException
 
 TEST_SEMAPHORE_MAX_COUNT = 2

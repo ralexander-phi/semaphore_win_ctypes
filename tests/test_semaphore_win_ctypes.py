@@ -5,7 +5,7 @@ import pytest
 import uuid
 
 from ctypes.wintypes import DWORD
-from semaphore_win_ctypes.semaphore_win_ctypes import Semaphore, \
+from semaphore_win_ctypes import Semaphore, \
     SemaphoreWaitTimeoutException, CreateSemaphore, OpenSemaphore, \
     AcquireSemaphore
 
