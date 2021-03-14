@@ -62,20 +62,22 @@ Similar work on other platforms:
 
 Other items:
 
-* `windows semaphore helper`_ — C++ demo of working with Windows Semaphore APIs
+* `windows semaphore helper`_ -- C++ demo of working with Windows Semaphore APIs
 
 Credits
 -------
 
 This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypackage`_ project template.
 
+
+.. _`shared between python processes`: https://stackoverflow.com/a/28854553
 .. _`built-in semaphore support`: https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Semaphore
-.. _CreateSemaphoreExW: https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-createsemaphoreexw
-.. _OpenSemaphoreW: https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-opensemaphorew
-.. _WaitForSingleObject: https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-waitforsingleobject
-.. _ReleaseSemaphore: https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-releasesemaphore
-.. _CloseHandle: https://docs.microsoft.com/en-us/windows/win32/api/handleapi/nf-handleapi-closehandle
-.. _Cookiecutter: https://github.com/audreyr/cookiecutter
+.. _`CreateSemaphoreExW`: https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-createsemaphoreexw
+.. _`OpenSemaphoreW`: https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-opensemaphorew
+.. _`WaitForSingleObject`: https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-waitforsingleobject
+.. _`ReleaseSemaphore`: https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-releasesemaphore
+.. _`CloseHandle`: https://docs.microsoft.com/en-us/windows/win32/api/handleapi/nf-handleapi-closehandle
+.. _`Cookiecutter`: https://github.com/audreyr/cookiecutter
 .. _`audreyr/cookiecutter-pypackage`: https://github.com/audreyr/cookiecutter-pypackage
 .. _`Python threading.Semaphore`: https://docs.python.org/3/library/threading.html#threading.Semaphore
 .. _`Python multiprocessing.Semaphore`: https://docs.python.org/3/library/multiprocessing.html#multiprocessing.Semaphore

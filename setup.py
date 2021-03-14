@@ -22,7 +22,7 @@ setup(
     author_email='raalexander.phi@gmail.com',
     python_requires='>=3.5',
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
@@ -36,6 +36,7 @@ setup(
     install_requires=[],
     license="MIT license",
     long_description=readme + '\n\n' + history,
+    long_description_content_type='text/x-rst',
     include_package_data=True,
     keywords='semaphore_win_ctypes',
     name='semaphore_win_ctypes',
@@ -47,6 +48,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/ralexander-phi/semaphore_win_ctypes',
-    version='0.1.0',
+    version='0.1.1',
     zip_safe=False,
 )

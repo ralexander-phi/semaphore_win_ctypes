@@ -22,7 +22,9 @@ def test_basic_with_statements(unique_name):
             pass
 
     with CreateSemaphore(unique_name) as created:
+        assert created.getvalue() == 1
         with OpenSemaphore(unique_name) as opened:
+            assert opened.getvalue() == 1
             with AcquireSemaphore(created, timeout_ms=0):
                 with pytest.raises(SemaphoreWaitTimeoutException):
                     # Already acquired
@@ -102,6 +104,8 @@ def test_open_without_create(unique_name):
     # Create it, then it will open
     sem1 = Semaphore(unique_name).create()
     sem2 = Semaphore(unique_name).open()
+    assert sem1.getvalue() == 1
+    assert sem2.getvalue() == 1
     sem2.close()
     sem1.close()
 
@@ -150,11 +154,13 @@ def test_too_many_closes():
 def test_low_starting_value():
     sem = Semaphore().create(5, 0)
     try:
+        assert sem.getvalue() == 0
         # fail: count is zero
         with pytest.raises(SemaphoreWaitTimeoutException) as _:
             sem.acquire(0)
         # release up to the max of 5
         for expected_count in range(5):
+            assert sem.getvalue() == expected_count
             old_count = sem.release(release_count=1)
             assert old_count == expected_count
         # additional release is an error

@@ -223,6 +223,16 @@ class Semaphore:
             raise WinError()
         self.hHandle = None
 
+    def getvalue(self) -> int:
+        assert self.hHandle is not None
+        try:
+            # quickly acquire and release to get the count
+            self.acquire(0)
+            return self.release() + 1
+        except SemaphoreWaitTimeoutException:
+            # acquire didn't immediately succeed, count must have been zero
+            return 0
+
 
 class CreateSemaphore:
     def __init__(self,
@@ -240,6 +250,9 @@ class CreateSemaphore:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.sem.close()
 
+    def getvalue(self) -> int:
+        return self.sem.getvalue()
+
 
 class OpenSemaphore:
     def __init__(self,
@@ -256,6 +269,9 @@ class OpenSemaphore:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.sem.close()
 
+    def getvalue(self) -> int:
+        return self.sem.getvalue()
+
 
 class AcquireSemaphore:
     def __init__(self,
@@ -271,3 +287,6 @@ class AcquireSemaphore:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.handle.sem.release()
+
+    def getvalue(self) -> int:
+        self.handle.getvalue()
