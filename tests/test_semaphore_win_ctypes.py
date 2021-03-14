@@ -25,7 +25,8 @@ def test_basic_with_statements(unique_name):
         assert created.getvalue() == 1
         with OpenSemaphore(unique_name) as opened:
             assert opened.getvalue() == 1
-            with AcquireSemaphore(created, timeout_ms=0):
+            with AcquireSemaphore(created, timeout_ms=0) as acquired:
+                assert acquired.getvalue() == 0
                 with pytest.raises(SemaphoreWaitTimeoutException):
                     # Already acquired
                     with AcquireSemaphore(opened, timeout_ms=0):

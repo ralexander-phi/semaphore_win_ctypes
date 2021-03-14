@@ -289,4 +289,4 @@ class AcquireSemaphore:
         self.handle.sem.release()
 
     def getvalue(self) -> int:
-        self.handle.getvalue()
+        return self.handle.getvalue()
