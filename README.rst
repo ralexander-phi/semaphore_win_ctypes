@@ -46,6 +46,10 @@ This module requires no runtime dependencies.
 See Also
 --------
 
+PyPI:
+
+* https://pypi.org/project/semaphore-win-ctypes/
+
 Documentation:
 
 * https://semaphore-win-ctypes.readthedocs.io/
