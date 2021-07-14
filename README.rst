@@ -88,4 +88,3 @@ This package was created with Cookiecutter_ and the `audreyr/cookiecutter-pypack
 .. _`Python asyncio.Semaphore`: https://docs.python.org/3/library/asyncio-sync.html#asyncio.Semaphore
 .. _`POSIX IPC`: https://semanchuk.com/philip/posix_ipc/
 .. _`windows semaphore helper`: https://github.com/ralexander-phi/windows-semaphore-helper
-
