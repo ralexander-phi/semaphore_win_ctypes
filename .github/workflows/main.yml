@@ -24,7 +24,14 @@ jobs:
         # See:
         # https://github.com/actions/python-versions/blob/main/versions-manifest.json
         # https://downloads.python.org/pypy/versions.json
-        python: ['3.7', '3.9', '3.10', 'pypy-3.7', 'pypy-3.8']
+        python: [
+          '3.7',
+          '3.9',
+          '3.10',
+          '3.11.0-alpha - 3.11.0',  # Next version
+          'pypy-3.7',
+          'pypy-3.8',
+        ]
     
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
